@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Rekap Infaq Pengajian</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --emerald-900: #064e3b;
+    --emerald-800: #065f46;
+    --emerald-700: #047857;
+    --emerald-600: #059669;
+    --emerald-500: #10b981;
+    --emerald-400: #34d399;
+    --emerald-100: #d1fae5;
+    --emerald-50:  #ecfdf5;
+    --gold: #d4a017;
+    --gold-light: #f4d03f;
+    --blue: #3b82f6;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --bg: #f0fdf4;
+    --card: #ffffff;
+    --card-hover: #f9fafb;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border: #e5e7eb;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,.08), 0 2px 4px -1px rgba(0,0,0,.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --nav-h: 68px;
+    --header-h: 200px;
+    --transition: .2s ease;
+  }
+  [data-theme="dark"] {
+    --bg: #0a1628;
+    --card: #112240;
+    --card-hover: #1a2f4a;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: #1e3a5f;
+    --shadow: 0 1px 3px rgba(0,0,0,.3);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.3);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,.4);
+    --emerald-50: rgba(16,185,129,.08);
+    --emerald-100: rgba(16,185,129,.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    transition: background var(--transition), color var(--transition);
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: linear-gradient(135deg, var(--emerald-800) 0%, var(--emerald-600) 100%);
+    padding: 16px 20px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .app-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cpath fill='rgba(255,255,255,.04)' d='M100 10 L110 40 L140 40 L115 58 L125 88 L100 70 L75 88 L85 58 L60 40 L90 40Z'/%3E%3C/svg%3E") repeat;
+    opacity: .4;
+  }
+  .header-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; position: relative;
+  }
+  .header-menu-btn {
+    background: rgba(255,255,255,.15); border: none; border-radius: 10px;
+    width: 40px; height: 40px; display: grid; place-items: center;
+    cursor: pointer; color: #fff; font-size: 18px;
+    backdrop-filter: blur(4px);
+  }
+  .header-title { text-align: center; }
+  .header-title h1 { color: #fff; font-size: 17px; font-weight: 700; letter-spacing: .3px; }
+  .header-title p { color: rgba(255,255,255,.75); font-size: 12px; margin-top: 2px; }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    background: rgba(255,255,255,.15); border: none; border-radius: 10px;
+    width: 40px; height: 40px; display: grid; place-items: center;
+    cursor: pointer; color: #fff; font-size: 17px;
+    backdrop-filter: blur(4px); transition: background var(--transition);
+  }
+  .icon-btn:hover { background: rgba(255,255,255,.25); }
+
+  /* ── HERO CARD ── */
+  .hero-card {
+    margin: 0 16px;
+    background: rgba(255,255,255,.12);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative; overflow: hidden;
+    transform: translateY(8px);
+  }
+  .hero-card::after {
+    content: '🕌';
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 64px; opacity: .25; pointer-events: none;
+  }
+  .hero-label { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .hero-amount {
+    color: #fff; font-size: 30px; font-weight: 800;
+    letter-spacing: -1px; line-height: 1.1; margin-bottom: 10px;
+  }
+  .hero-meta {
+    display: flex; gap: 16px;
+  }
+  .hero-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.18); border-radius: 20px;
+    padding: 4px 12px; color: #fff; font-size: 12px; font-weight: 600;
+  }
+
+  /* ── PAGES ── */
+  .page { display: none; padding: 0 0 calc(var(--nav-h) + 16px); }
+  .page.active { display: block; }
+  .page-content { padding: 0 16px; }
+
+  /* CATEGORY CARDS */
+  .cat-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+    margin: 28px 16px 20px;
+  }
+  .cat-card {
+    background: var(--card); border-radius: var(--radius-sm);
+    padding: 14px 12px; box-shadow: var(--shadow);
+    border: 1px solid var(--border); cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition);
+    position: relative; overflow: hidden;
+  }
+  .cat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .cat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .cat-card.ngaji::before { background: var(--emerald-600); }
+  .cat-card.muda::before { background: var(--blue); }
+  .cat-card.cabe::before { background: var(--amber); }
+  .cat-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: grid; place-items: center; font-size: 18px; margin-bottom: 8px;
+  }
+  .cat-icon.ngaji { background: var(--emerald-50); }
+  .cat-icon.muda  { background: #eff6ff; }
+  .cat-icon.cabe  { background: #fffbeb; }
+  [data-theme="dark"] .cat-icon.muda { background: rgba(59,130,246,.12); }
+  [data-theme="dark"] .cat-icon.cabe { background: rgba(245,158,11,.12); }
+  .cat-name { font-size: 11px; color: var(--text-secondary); font-weight: 500; margin-bottom: 4px; }
+  .cat-amount { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+  .cat-txn { font-size: 10px; font-weight: 600; margin-top: 3px; }
+  .cat-txn.ngaji { color: var(--emerald-600); }
+  .cat-txn.muda  { color: var(--blue); }
+  .cat-txn.cabe  { color: var(--amber); }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .see-all { font-size: 13px; color: var(--emerald-600); font-weight: 600;
+    background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+
+  /* ── TRANSACTION LIST ── */
+  .txn-list { display: flex; flex-direction: column; gap: 8px; }
+  .txn-item {
+    background: var(--card); border-radius: var(--radius-sm);
+    padding: 14px; display: flex; align-items: center; gap: 12px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+    transition: background var(--transition);
+  }
+  .txn-item:hover { background: var(--card-hover); }
+  .txn-avatar {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: grid; place-items: center; font-size: 20px; flex-shrink: 0;
+  }
+  .txn-avatar.ngaji { background: var(--emerald-50); }
+  .txn-avatar.muda  { background: #eff6ff; }
+  .txn-avatar.cabe  { background: #fffbeb; }
+  [data-theme="dark"] .txn-avatar.muda { background: rgba(59,130,246,.12); }
+  [data-theme="dark"] .txn-avatar.cabe { background: rgba(245,158,11,.12); }
+  .txn-info { flex: 1; min-width: 0; }
+  .txn-cat { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .txn-date { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .txn-note { font-size: 12px; color: var(--text-secondary); margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .txn-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .txn-amount { font-size: 14px; font-weight: 700; color: var(--emerald-600); }
+  .txn-actions { display: flex; gap: 6px; }
+  .txn-btn {
+    width: 30px; height: 30px; border-radius: 8px; border: none;
+    display: grid; place-items: center; cursor: pointer; font-size: 13px;
+    transition: background var(--transition);
+  }
+  .txn-btn.edit { background: var(--emerald-50); color: var(--emerald-700); }
+  .txn-btn.edit:hover { background: var(--emerald-100); }
+  .txn-btn.del { background: #fef2f2; color: var(--red); }
+  .txn-btn.del:hover { background: #fee2e2; }
+  [data-theme="dark"] .txn-btn.edit { background: rgba(16,185,129,.12); }
+  [data-theme="dark"] .txn-btn.del  { background: rgba(239,68,68,.12); }
+
+  /* ── MINI STAT ── */
+  .mini-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin: 0 16px 20px;
+  }
+  .mini-stat {
+    background: var(--card); border-radius: var(--radius-sm);
+    padding: 14px; box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .mini-stat-label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
+  .mini-stat-val { font-size: 17px; font-weight: 800; color: var(--text-primary); }
+  .mini-stat-sub { font-size: 11px; color: var(--emerald-600); font-weight: 600; margin-top: 2px; }
+
+  /* ── FORMS ── */
+  .form-card {
+    background: var(--card); border-radius: var(--radius); margin: 16px;
+    padding: 20px; box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  }
+  .form-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; color: var(--text-primary); }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    margin-bottom: 6px; display: block; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--text-primary); font-size: 15px; font-family: inherit;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--emerald-500); box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+  }
+  .form-textarea { resize: none; height: 80px; }
+  .cat-selector { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .cat-opt {
+    padding: 10px 8px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+    background: var(--bg); cursor: pointer; text-align: center; transition: all var(--transition);
+  }
+  .cat-opt .emoji { font-size: 22px; display: block; margin-bottom: 4px; }
+  .cat-opt .lbl { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+  .cat-opt.selected { border-color: var(--emerald-500); background: var(--emerald-50); }
+  .cat-opt.selected .lbl { color: var(--emerald-700); }
+  .btn-primary {
+    width: 100%; padding: 14px; background: linear-gradient(135deg, var(--emerald-700), var(--emerald-500));
+    color: #fff; border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity var(--transition), transform var(--transition);
+    box-shadow: 0 4px 12px rgba(16,185,129,.3);
+  }
+  .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    padding: 12px 20px; background: var(--bg); color: var(--text-secondary);
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all var(--transition);
+  }
+  .btn-secondary:hover { border-color: var(--emerald-500); color: var(--emerald-700); }
+
+  /* ── HISTORY PAGE ── */
+  .filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-chip {
+    padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--card); font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    cursor: pointer; transition: all var(--transition); white-space: nowrap;
+  }
+  .filter-chip.active { background: var(--emerald-600); border-color: var(--emerald-600); color: #fff; }
+  .search-box {
+    width: 100%; padding: 11px 14px 11px 40px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--card); color: var(--text-primary);
+    font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px;
+    transition: border-color var(--transition);
+  }
+  .search-box:focus { border-color: var(--emerald-500); }
+  .search-wrap { position: relative; }
+  .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); font-size: 15px; pointer-events: none; }
+
+  /* ── REPORTS PAGE ── */
+  .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .report-card {
+    background: var(--card); border-radius: var(--radius-sm);
+    padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .report-card.full { grid-column: span 2; }
+  .report-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  .report-val { font-size: 20px; font-weight: 800; color: var(--text-primary); margin-top: 4px; }
+  .chart-wrap { background: var(--card); border-radius: var(--radius-sm);
+    padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 16px; }
+  .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--text-primary); }
+  .chart-canvas-wrap { height: 200px; position: relative; }
+  .btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .btn-export {
+    flex: 1; padding: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+    background: var(--card); color: var(--text-primary); font-size: 13px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all var(--transition);
+  }
+  .btn-export:hover { border-color: var(--emerald-500); color: var(--emerald-700); }
+  .btn-export.green { background: linear-gradient(135deg,var(--emerald-700),var(--emerald-500));
+    border-color: transparent; color: #fff; box-shadow: 0 4px 12px rgba(16,185,129,.25); }
+  .monthly-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .monthly-table th {
+    text-align: left; padding: 10px 12px; background: var(--emerald-50);
+    color: var(--emerald-800); font-weight: 700; font-size: 12px;
+  }
+  [data-theme="dark"] .monthly-table th { background: rgba(16,185,129,.1); color: var(--emerald-400); }
+  .monthly-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-primary); }
+  .monthly-table tr:last-child td { border-bottom: none; }
+  .monthly-table tr:hover td { background: var(--card-hover); }
+
+  /* ── FAB ── */
+  .fab {
+    position: fixed; bottom: calc(var(--nav-h) + 16px); right: 20px;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--emerald-700), var(--emerald-500));
+    color: #fff; border: none; box-shadow: 0 6px 20px rgba(16,185,129,.4);
+    font-size: 26px; cursor: pointer; display: grid; place-items: center;
+    transition: transform var(--transition), box-shadow var(--transition);
+    z-index: 100;
+  }
+  .fab:hover { transform: scale(1.08); box-shadow: 0 8px 24px rgba(16,185,129,.5); }
+  .fab:active { transform: scale(.96); }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px; height: var(--nav-h);
+    background: var(--card); border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-around;
+    padding: 0 4px; z-index: 200;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px; background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 10px; font-weight: 600;
+    transition: color var(--transition);
+  }
+  .nav-item .nav-icon { font-size: 22px; transition: transform var(--transition); }
+  .nav-item.active { color: var(--emerald-600); }
+  .nav-item.active .nav-icon { transform: scale(1.15); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+    backdrop-filter: blur(4px); z-index: 500; align-items: flex-end;
+    padding: 0; animation: fadeIn .2s ease;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 480px; margin: 0 auto;
+    padding: 24px 20px 32px; max-height: 90vh; overflow-y: auto;
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px;
+    margin: 0 auto 20px; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text-primary); }
+  .modal-confirm-icon { font-size: 48px; text-align: center; margin-bottom: 12px; }
+  .modal-confirm-text { font-size: 15px; color: var(--text-secondary); text-align: center;
+    margin-bottom: 24px; line-height: 1.5; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btns .btn-secondary { flex: 1; }
+  .modal-btns .btn-danger {
+    flex: 1; padding: 12px 20px; background: var(--red); color: #fff; border: none;
+    border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: var(--emerald-800); color: #fff; padding: 12px 24px; border-radius: 30px;
+    font-size: 13px; font-weight: 600; z-index: 999; transition: transform .3s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,.2); white-space: nowrap; display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--red); }
+
+  /* ── EMPTY STATE ── */
+  .empty {
+    text-align: center; padding: 48px 20px;
+  }
+  .empty-icon { font-size: 52px; margin-bottom: 12px; }
+  .empty-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .empty-sub { font-size: 14px; color: var(--text-muted); }
+
+  /* ── MONTH PICKER ── */
+  .month-filter { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px;
+    scrollbar-width: none; }
+  .month-filter::-webkit-scrollbar { display: none; }
+
+  /* ── PAGE TOP SPACING ── */
+  #page-home { padding-top: 0; }
+  #page-home .page-content { padding: 0 16px 0; }
+  #page-add, #page-history, #page-reports { padding-top: 16px; }
+
+  /* ── DATE BANNER on non-home pages ── */
+  .page-header {
+    background: linear-gradient(135deg, var(--emerald-800), var(--emerald-600));
+    padding: 56px 20px 20px;
+    position: relative; overflow: hidden;
+  }
+  .page-header h2 { color: #fff; font-size: 20px; font-weight: 800; }
+  .page-header p  { color: rgba(255,255,255,.7); font-size: 13px; margin-top: 4px; }
+
+  /* ── SORT BUTTONS ── */
+  .sort-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .sort-btn {
+    padding: 7px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    border: 1.5px solid var(--border); background: var(--card); color: var(--text-secondary);
+    cursor: pointer; transition: all var(--transition); display: flex; align-items: center; gap: 4px;
+  }
+  .sort-btn.active { background: var(--emerald-600); border-color: var(--emerald-600); color: #fff; }
+
+  /* ── PROGRESS BAR ── */
+  .cat-progress { margin-top: 6px; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+  .cat-progress-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="app-header" id="mainHeader">
+  <div class="header-top">
+    <button class="header-menu-btn" onclick="toggleMenu()" aria-label="Menu">☰</button>
+    <div class="header-title">
+      <h1>Rekap Infaq Pengajian</h1>
+      <p id="headerDate"></p>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="toggleDark()" id="darkBtn" aria-label="Mode gelap">🌙</button>
+      <button class="icon-btn" aria-label="Notifikasi">🔔</button>
+    </div>
+  </div>
+  <!-- Hero card (dashboard only) -->
+  <div class="hero-card" id="heroCard">
+    <div class="hero-label">Total Infaq Keseluruhan</div>
+    <div class="hero-amount" id="heroTotal">Rp 0</div>
+    <div class="hero-meta">
+      <div class="hero-badge">📋 <span id="heroTxnCount">0</span> Transaksi</div>
+      <div class="hero-badge">📅 Hari ini: <span id="heroToday">Rp 0</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ PAGES ══ -->
+
+<!-- Dashboard -->
+<div class="page active" id="page-home">
+  <div class="cat-grid">
+    <div class="cat-card ngaji" onclick="navigate('history','ngaji')">
+      <div class="cat-icon ngaji">🕌</div>
+      <div class="cat-name">Ngaji Kelompok</div>
+      <div class="cat-amount" id="catNgajiAmt">Rp 0</div>
+      <div class="cat-progress"><div class="cat-progress-fill" id="catNgajiBar" style="background:var(--emerald-600);width:0%"></div></div>
+      <div class="cat-txn ngaji" id="catNgajiTxn">0 Transaksi</div>
+    </div>
+    <div class="cat-card muda" onclick="navigate('history','muda')">
+      <div class="cat-icon muda">👤</div>
+      <div class="cat-name">Muda/I</div>
+      <div class="cat-amount" id="catMudaAmt">Rp 0</div>
+      <div class="cat-progress"><div class="cat-progress-fill" id="catMudaBar" style="background:var(--blue);width:0%"></div></div>
+      <div class="cat-txn muda" id="catMudaTxn">0 Transaksi</div>
+    </div>
+    <div class="cat-card cabe" onclick="navigate('history','cabe')">
+      <div class="cat-icon cabe">😊</div>
+      <div class="cat-name">Cabe Rawit</div>
+      <div class="cat-amount" id="catCabeAmt">Rp 0</div>
+      <div class="cat-progress"><div class="cat-progress-fill" id="catCabeBar" style="background:var(--amber);width:0%"></div></div>
+      <div class="cat-txn cabe" id="catCabeTxn">0 Transaksi</div>
+    </div>
+  </div>
+  <!-- Mini stats -->
+  <div class="mini-stats">
+    <div class="mini-stat">
+      <div class="mini-stat-label">Bulan Ini</div>
+      <div class="mini-stat-val" id="monthlyTotal">Rp 0</div>
+      <div class="mini-stat-sub" id="monthlyCount">0 transaksi</div>
+    </div>
+    <div class="mini-stat">
+      <div class="mini-stat-label">Hari Ini</div>
+      <div class="mini-stat-val" id="todayTotal">Rp 0</div>
+      <div class="mini-stat-sub" id="todayCount">0 transaksi</div>
+    </div>
+  </div>
+  <!-- Recent -->
+  <div class="page-content">
+    <div class="section-header">
+      <span class="section-title">Riwayat Terbaru</span>
+      <button class="see-all" onclick="navigate('history')">Lihat Semua ›</button>
+    </div>
+    <div class="txn-list" id="recentList"></div>
+  </div>
+</div>
+
+<!-- Add / Edit -->
+<div class="page" id="page-add">
+  <div class="page-header">
+    <h2 id="formTitle">Tambah Infaq</h2>
+    <p>Catat pemasukan infaq pengajian</p>
+  </div>
+  <div class="form-card">
+    <div class="form-group">
+      <label class="form-label">Kategori Pengajian *</label>
+      <div class="cat-selector">
+        <div class="cat-opt" data-cat="ngaji" onclick="selectCat('ngaji')">
+          <span class="emoji">🕌</span><span class="lbl">Ngaji Kelompok</span>
+        </div>
+        <div class="cat-opt" data-cat="muda" onclick="selectCat('muda')">
+          <span class="emoji">👤</span><span class="lbl">Muda/I</span>
+        </div>
+        <div class="cat-opt" data-cat="cabe" onclick="selectCat('cabe')">
+          <span class="emoji">😊</span><span class="lbl">Cabe Rawit</span>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nominal Infaq *</label>
+      <input class="form-input" id="inputAmount" type="text" placeholder="Rp 0" inputmode="numeric" oninput="fmtAmount(this)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tanggal Transaksi *</label>
+      <input class="form-input" id="inputDate" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Keterangan (opsional)</label>
+      <textarea class="form-textarea" id="inputNote" placeholder="Contoh: Infaq rutin Jumat malam..."></textarea>
+    </div>
+    <button class="btn-primary" onclick="saveTransaction()" id="saveBtn">
+      💾 Simpan Infaq
+    </button>
+    <div style="height:10px"></div>
+    <button class="btn-secondary" onclick="cancelEdit()" id="cancelBtn" style="display:none;width:100%">Batal</button>
+  </div>
+</div>
+
+<!-- History -->
+<div class="page" id="page-history">
+  <div class="page-header">
+    <h2>Riwayat Transaksi</h2>
+    <p>Semua catatan infaq pengajian</p>
+  </div>
+  <div class="page-content" style="padding-top:16px">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-box" id="searchInput" type="search" placeholder="Cari transaksi..." oninput="renderHistory()">
+    </div>
+    <div class="filter-row">
+      <div class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">Semua</div>
+      <div class="filter-chip" data-filter="ngaji" onclick="setFilter('ngaji',this)">🕌 Ngaji</div>
+      <div class="filter-chip" data-filter="muda" onclick="setFilter('muda',this)">👤 Muda/I</div>
+      <div class="filter-chip" data-filter="cabe" onclick="setFilter('cabe',this)">😊 Cabe Rawit</div>
+    </div>
+    <div class="month-filter" id="monthFilter"></div>
+    <div class="sort-row">
+      <button class="sort-btn active" id="sortNewest" onclick="setSort('newest')">↓ Terbaru</button>
+      <button class="sort-btn" id="sortOldest" onclick="setSort('oldest')">↑ Terlama</button>
+      <button class="sort-btn" id="sortAmt" onclick="setSort('amount')">↕ Nominal</button>
+    </div>
+    <div class="txn-list" id="historyList"></div>
+  </div>
+</div>
+
+<!-- Reports -->
+<div class="page" id="page-reports">
+  <div class="page-header">
+    <h2>Laporan Infaq</h2>
+    <p>Statistik dan rekap pemasukan</p>
+  </div>
+  <div class="page-content" style="padding-top:16px">
+    <div class="report-grid">
+      <div class="report-card">
+        <div class="report-label">Total Keseluruhan</div>
+        <div class="report-val" id="rptTotal">Rp 0</div>
+      </div>
+      <div class="report-card">
+        <div class="report-label">Total Transaksi</div>
+        <div class="report-val" id="rptTxn">0</div>
+      </div>
+      <div class="report-card">
+        <div class="report-label">Bulan Ini</div>
+        <div class="report-val" id="rptMonthly">Rp 0</div>
+      </div>
+      <div class="report-card">
+        <div class="report-label">Rata-rata / Transaksi</div>
+        <div class="report-val" id="rptAvg">Rp 0</div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Persentase per Kategori</div>
+      <div class="chart-canvas-wrap"><canvas id="chartDoughnut"></canvas></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Pemasukan 6 Bulan Terakhir</div>
+      <div class="chart-canvas-wrap"><canvas id="chartBar"></canvas></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Rekap per Kategori</div>
+      <table class="monthly-table" id="catTable">
+        <thead><tr><th>Kategori</th><th>Total</th><th>Transaksi</th><th>%</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Rekap Bulanan</div>
+      <table class="monthly-table" id="monthlyTable">
+        <thead><tr><th>Bulan</th><th>Total</th><th>Transaksi</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="btn-row">
+      <button class="btn-export green" onclick="exportExcel()">📊 Export Excel</button>
+      <button class="btn-export" onclick="backupJSON()">💾 Backup JSON</button>
+    </div>
+    <div class="btn-row">
+      <label class="btn-export" style="cursor:pointer">
+        📂 Restore JSON
+        <input type="file" accept=".json" style="display:none" onchange="restoreJSON(this)">
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FAB ══ -->
+<button class="fab" onclick="navigate('add')" id="fab" title="Tambah Infaq">＋</button>
+
+<!-- ══ BOTTOM NAV ══ -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-page="home" onclick="navigate('home')">
+    <span class="nav-icon">🏠</span>Dashboard
+  </button>
+  <button class="nav-item" data-page="add" onclick="navigate('add')">
+    <span class="nav-icon">➕</span>Tambah
+  </button>
+  <button class="nav-item" data-page="history" onclick="navigate('history')">
+    <span class="nav-icon">📋</span>Riwayat
+  </button>
+  <button class="nav-item" data-page="reports" onclick="navigate('reports')">
+    <span class="nav-icon">📊</span>Laporan
+  </button>
+</nav>
+
+<!-- ══ MODAL DELETE ══ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-confirm-icon">🗑️</div>
+    <div class="modal-confirm-text">Hapus transaksi ini?<br><small style="color:var(--text-muted)">Tindakan ini tidak dapat dibatalkan.</small></div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeModal()">Batal</button>
+      <button class="btn-danger" onclick="confirmDelete()">Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const CAT = {
+  ngaji: { name: 'Ngaji Kelompok', emoji: '🕌', color: '#059669' },
+  muda:  { name: 'Muda/I',         emoji: '👤', color: '#3b82f6' },
+  cabe:  { name: 'Cabe Rawit',     emoji: '😊', color: '#f59e0b' },
+};
+const STORAGE_KEY = 'infaq_data_v2';
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let transactions = [];
+let currentPage  = 'home';
+let editId       = null;
+let selectedCat  = null;
+let filterCat    = 'all';
+let filterMonth  = 'all';
+let sortMode     = 'newest';
+let deleteTarget = null;
+let chartDoughnut = null;
+let chartBar      = null;
+
+// ── STORAGE ────────────────────────────────────────────────────────────────
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions)); }
+function load() {
+  try { transactions = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { transactions = []; }
+}
+
+// ── UTILITIES ──────────────────────────────────────────────────────────────
+function fmt(n) {
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+function today() {
+  return new Date().toISOString().slice(0,10);
+}
+function monthKey(dateStr) {
+  return dateStr.slice(0,7);
+}
+function monthLabel(key) {
+  const [y,m] = key.split('-');
+  return new Date(y,m-1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+}
+function fmtAmount(el) {
+  let raw = el.value.replace(/\D/g,'');
+  if (!raw) { el.value = ''; return; }
+  el.value = 'Rp ' + parseInt(raw,10).toLocaleString('id-ID');
+}
+function parseAmount(str) {
+  return parseInt(str.replace(/\D/g,''),10) || 0;
+}
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+function setHeaderDate() {
+  const d = new Date();
+  document.getElementById('headerDate').textContent =
+    d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function navigate(page, preFilter) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.page === page);
+  });
+  const heroCard = document.getElementById('heroCard');
+  if (page === 'home') {
+    heroCard.style.display = '';
+    document.getElementById('fab').style.display = '';
+  } else {
+    heroCard.style.display = 'none';
+    document.getElementById('fab').style.display = page === 'add' ? 'none' : '';
+  }
+  if (page === 'history') {
+    if (preFilter) { filterCat = preFilter; refreshFilterUI(); }
+    renderMonthFilter();
+    renderHistory();
+  }
+  if (page === 'add' && !editId) resetForm();
+  if (page === 'reports') renderReports();
+  window.scrollTo(0,0);
+}
+
+// ── DARK MODE ──────────────────────────────────────────────────────────────
+function toggleDark() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('darkBtn').textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('infaq_theme', isDark ? 'light' : 'dark');
+  if (chartDoughnut) renderReports();
+}
+function loadTheme() {
+  const t = localStorage.getItem('infaq_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('darkBtn').textContent = t === 'dark' ? '☀️' : '🌙';
+}
+
+// ── DASHBOARD RENDER ───────────────────────────────────────────────────────
+function renderDashboard() {
+  const total    = transactions.reduce((s,t) => s + t.amount, 0);
+  const todayStr = today();
+  const monthStr = todayStr.slice(0,7);
+  const todayTxn = transactions.filter(t => t.date === todayStr);
+  const monthTxn = transactions.filter(t => t.date.startsWith(monthStr));
+
+  document.getElementById('heroTotal').textContent    = fmt(total);
+  document.getElementById('heroTxnCount').textContent = transactions.length;
+  document.getElementById('heroToday').textContent    = fmt(todayTxn.reduce((s,t) => s+t.amount,0));
+  document.getElementById('todayTotal').textContent   = fmt(todayTxn.reduce((s,t) => s+t.amount,0));
+  document.getElementById('todayCount').textContent   = todayTxn.length + ' transaksi';
+  document.getElementById('monthlyTotal').textContent = fmt(monthTxn.reduce((s,t) => s+t.amount,0));
+  document.getElementById('monthlyCount').textContent = monthTxn.length + ' transaksi';
+
+  Object.keys(CAT).forEach(cat => {
+    const catTxn = transactions.filter(t => t.cat === cat);
+    const catAmt = catTxn.reduce((s,t) => s+t.amount,0);
+    const pct    = total > 0 ? (catAmt/total*100).toFixed(0) : 0;
+    const suffix = cat.charAt(0).toUpperCase() + cat.slice(1);
+    document.getElementById('cat'+suffix+'Amt').textContent = fmt(catAmt);
+    document.getElementById('cat'+suffix+'Txn').textContent = catTxn.length + ' Transaksi';
+    document.getElementById('cat'+suffix+'Bar').style.width  = pct + '%';
+  });
+
+  // Recent 5
+  const recent = [...transactions].sort((a,b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0,5);
+  document.getElementById('recentList').innerHTML = recent.length
+    ? recent.map(t => txnHTML(t)).join('')
+    : emptyHTML('Belum ada data','Tambah infaq pertama kamu!');
+}
+
+function txnHTML(t) {
+  const d = new Date(t.date + 'T00:00:00');
+  const dateStr = d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  return `
+  <div class="txn-item">
+    <div class="txn-avatar ${t.cat}">${CAT[t.cat].emoji}</div>
+    <div class="txn-info">
+      <div class="txn-cat">${CAT[t.cat].name}</div>
+      <div class="txn-date">${dateStr}</div>
+      ${t.note ? `<div class="txn-note">${esc(t.note)}</div>` : ''}
+    </div>
+    <div class="txn-right">
+      <div class="txn-amount">${fmt(t.amount)}</div>
+      <div class="txn-actions">
+        <button class="txn-btn edit" onclick="editTxn('${t.id}')" title="Edit">✏️</button>
+        <button class="txn-btn del"  onclick="deleteTxn('${t.id}')" title="Hapus">🗑️</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function emptyHTML(title, sub) {
+  return `<div class="empty"><div class="empty-icon">📭</div>
+  <div class="empty-title">${title}</div><div class="empty-sub">${sub}</div></div>`;
+}
+
+function esc(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── FORM ───────────────────────────────────────────────────────────────────
+function resetForm() {
+  editId      = null;
+  selectedCat = null;
+  document.getElementById('formTitle').textContent   = 'Tambah Infaq';
+  document.getElementById('saveBtn').textContent     = '💾 Simpan Infaq';
+  document.getElementById('cancelBtn').style.display = 'none';
+  document.getElementById('inputAmount').value       = '';
+  document.getElementById('inputDate').value         = today();
+  document.getElementById('inputNote').value         = '';
+  document.querySelectorAll('.cat-opt').forEach(o => o.classList.remove('selected'));
+}
+
+function selectCat(cat) {
+  selectedCat = cat;
+  document.querySelectorAll('.cat-opt').forEach(o => {
+    o.classList.toggle('selected', o.dataset.cat === cat);
+  });
+}
+
+function saveTransaction() {
+  if (!selectedCat) { toast('Pilih kategori pengajian', true); return; }
+  const amount = parseAmount(document.getElementById('inputAmount').value);
+  if (!amount || amount <= 0) { toast('Masukkan nominal yang valid', true); return; }
+  const date = document.getElementById('inputDate').value;
+  if (!date) { toast('Pilih tanggal transaksi', true); return; }
+  const note = document.getElementById('inputNote').value.trim();
+
+  if (editId) {
+    const idx = transactions.findIndex(t => t.id === editId);
+    if (idx >= 0) {
+      transactions[idx] = { ...transactions[idx], cat: selectedCat, amount, date, note };
+    }
+    toast('Transaksi diperbarui ✓');
+  } else {
+    transactions.push({ id: uid(), cat: selectedCat, amount, date, note, createdAt: Date.now() });
+    toast('Infaq berhasil dicatat ✓');
+  }
+  save();
+  renderDashboard();
+  resetForm();
+  navigate('home');
+}
+
+function editTxn(id) {
+  const t = transactions.find(t => t.id === id);
+  if (!t) return;
+  editId = id;
+  selectCat(t.cat);
+  document.getElementById('inputAmount').value       = fmt(t.amount);
+  document.getElementById('inputDate').value         = t.date;
+  document.getElementById('inputNote').value         = t.note || '';
+  document.getElementById('formTitle').textContent   = 'Edit Transaksi';
+  document.getElementById('saveBtn').textContent     = '✏️ Perbarui';
+  document.getElementById('cancelBtn').style.display = '';
+  navigate('add');
+}
+
+function cancelEdit() { editId = null; resetForm(); navigate('home'); }
+
+// ── DELETE ─────────────────────────────────────────────────────────────────
+function deleteTxn(id) {
+  deleteTarget = id;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('deleteModal').classList.remove('open');
+  deleteTarget = null;
+}
+function confirmDelete() {
+  if (!deleteTarget) return;
+  transactions = transactions.filter(t => t.id !== deleteTarget);
+  save(); renderDashboard();
+  if (currentPage === 'history') renderHistory();
+  closeModal();
+  toast('Transaksi dihapus');
+}
+
+// ── HISTORY ────────────────────────────────────────────────────────────────
+function setFilter(cat, el) {
+  filterCat = cat;
+  refreshFilterUI(el);
+  renderHistory();
+}
+function refreshFilterUI(activeEl) {
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.filter === filterCat);
+  });
+}
+function setSort(mode) {
+  sortMode = mode;
+  ['Newest','Oldest','Amt'].forEach(s => {
+    document.getElementById('sort'+s).classList.toggle('active', mode === s.toLowerCase() || (mode==='amount' && s==='Amt'));
+  });
+  renderHistory();
+}
+function renderMonthFilter() {
+  const months = [...new Set(transactions.map(t => monthKey(t.date)))].sort((a,b) => b.localeCompare(a));
+  const el = document.getElementById('monthFilter');
+  el.innerHTML = `<div class="filter-chip ${filterMonth==='all'?'active':''}" onclick="setMonthFilter('all',this)">Semua Bulan</div>` +
+    months.map(m => `<div class="filter-chip ${filterMonth===m?'active':''}" onclick="setMonthFilter('${m}',this)">${monthLabel(m)}</div>`).join('');
+}
+function setMonthFilter(m, el) {
+  filterMonth = m;
+  document.querySelectorAll('#monthFilter .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderHistory();
+}
+function renderHistory() {
+  let data = [...transactions];
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (filterCat !== 'all') data = data.filter(t => t.cat === filterCat);
+  if (filterMonth !== 'all') data = data.filter(t => t.date.startsWith(filterMonth));
+  if (q) data = data.filter(t => CAT[t.cat].name.toLowerCase().includes(q) || (t.note||'').toLowerCase().includes(q) || t.amount.toString().includes(q));
+  if (sortMode === 'newest')  data.sort((a,b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+  if (sortMode === 'oldest')  data.sort((a,b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+  if (sortMode === 'amount')  data.sort((a,b) => b.amount - a.amount);
+  document.getElementById('historyList').innerHTML = data.length
+    ? data.map(t => txnHTML(t)).join('')
+    : emptyHTML('Tidak ada data', filterCat !== 'all' || filterMonth !== 'all' || q ? 'Coba ubah filter pencarian' : 'Belum ada transaksi');
+}
+
+// ── REPORTS ────────────────────────────────────────────────────────────────
+function renderReports() {
+  const total = transactions.reduce((s,t) => s+t.amount,0);
+  const monthStr = today().slice(0,7);
+  const monthlyAmt = transactions.filter(t => t.date.startsWith(monthStr)).reduce((s,t)=>s+t.amount,0);
+  const avg = transactions.length ? Math.round(total/transactions.length) : 0;
+
+  document.getElementById('rptTotal').textContent   = fmt(total);
+  document.getElementById('rptTxn').textContent     = transactions.length;
+  document.getElementById('rptMonthly').textContent = fmt(monthlyAmt);
+  document.getElementById('rptAvg').textContent     = fmt(avg);
+
+  // Doughnut
+  const catAmts = Object.keys(CAT).map(k => transactions.filter(t=>t.cat===k).reduce((s,t)=>s+t.amount,0));
+  const isDark  = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textCol = isDark ? '#94a3b8' : '#6b7280';
+
+  if (chartDoughnut) chartDoughnut.destroy();
+  chartDoughnut = new Chart(document.getElementById('chartDoughnut'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.values(CAT).map(c => c.name),
+      datasets: [{ data: catAmts, backgroundColor: ['#059669','#3b82f6','#f59e0b'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: textCol, font: { size: 12, weight: '600' }, padding: 14 } },
+        tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.raw) } }
+      },
+      cutout: '62%'
+    }
+  });
+
+  // Bar (6 months)
+  const months6 = [];
+  for (let i=5; i>=0; i--) {
+    const d = new Date(); d.setMonth(d.getMonth()-i);
+    months6.push(d.toISOString().slice(0,7));
+  }
+  const barData = months6.map(m => transactions.filter(t=>t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0));
+  const barLabels = months6.map(m => {
+    const [y,mo] = m.split('-');
+    return new Date(y,mo-1).toLocaleDateString('id-ID',{month:'short'});
+  });
+
+  if (chartBar) chartBar.destroy();
+  chartBar = new Chart(document.getElementById('chartBar'), {
+    type: 'bar',
+    data: {
+      labels: barLabels,
+      datasets: [{
+        label: 'Total Infaq',
+        data: barData,
+        backgroundColor: 'rgba(5,150,105,.75)',
+        borderRadius: 8,
+        hoverBackgroundColor: '#059669'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.raw) } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: textCol } },
+        y: { grid: { color: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)' },
+             ticks: { color: textCol, callback: v => 'Rp '+v.toLocaleString('id-ID') } }
+      }
+    }
+  });
+
+  // Category table
+  const catBody = document.querySelector('#catTable tbody');
+  catBody.innerHTML = Object.keys(CAT).map(k => {
+    const amt = transactions.filter(t=>t.cat===k).reduce((s,t)=>s+t.amount,0);
+    const cnt = transactions.filter(t=>t.cat===k).length;
+    const pct = total > 0 ? ((amt/total)*100).toFixed(1) : 0;
+    return `<tr><td>${CAT[k].emoji} ${CAT[k].name}</td><td>${fmt(amt)}</td><td>${cnt}</td><td>${pct}%</td></tr>`;
+  }).join('');
+
+  // Monthly table
+  const allMonths = [...new Set(transactions.map(t=>monthKey(t.date)))].sort((a,b)=>b.localeCompare(a));
+  const mBody = document.querySelector('#monthlyTable tbody');
+  mBody.innerHTML = allMonths.length ? allMonths.map(m => {
+    const mTxn = transactions.filter(t=>t.date.startsWith(m));
+    return `<tr><td>${monthLabel(m)}</td><td>${fmt(mTxn.reduce((s,t)=>s+t.amount,0))}</td><td>${mTxn.length}</td></tr>`;
+  }).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Belum ada data</td></tr>';
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+function exportExcel() {
+  if (!transactions.length) { toast('Belum ada data untuk diekspor', true); return; }
+  const rows = [['Tanggal','Kategori','Nominal','Keterangan']];
+  [...transactions].sort((a,b)=>b.date.localeCompare(a.date)).forEach(t => {
+    rows.push([t.date, CAT[t.cat].name, t.amount, t.note||'']);
+  });
+  rows.push(['','','','']);
+  rows.push(['REKAP PER KATEGORI','','','']);
+  Object.keys(CAT).forEach(k => {
+    const amt = transactions.filter(t=>t.cat===k).reduce((s,t)=>s+t.amount,0);
+    rows.push([CAT[k].name, '', amt, '']);
+  });
+  rows.push(['TOTAL', '', transactions.reduce((s,t)=>s+t.amount,0), '']);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:14},{wch:18},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Infaq');
+  XLSX.writeFile(wb, 'Rekap_Infaq_' + today() + '.xlsx');
+  toast('File Excel berhasil diunduh ✓');
+}
+
+function backupJSON() {
+  if (!transactions.length) { toast('Belum ada data untuk dibackup', true); return; }
+  const blob = new Blob([JSON.stringify({version:2,exported:new Date().toISOString(),transactions},null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'infaq_backup_' + today() + '.json';
+  a.click();
+  toast('Backup JSON berhasil ✓');
+}
+
+function restoreJSON(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const arr  = data.transactions || data;
+      if (!Array.isArray(arr)) throw new Error();
+      transactions = arr;
+      save(); renderDashboard();
+      if (currentPage === 'history') renderHistory();
+      if (currentPage === 'reports') renderReports();
+      toast('Data berhasil dipulihkan (' + arr.length + ' transaksi) ✓');
+    } catch { toast('File tidak valid', true); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, err=false) {
+  const el = document.getElementById('toast');
+  el.textContent = (err ? '⚠️ ' : '✅ ') + msg;
+  el.className   = 'toast show' + (err ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── MISC ──────────────────────────────────────────────────────────────────
+function toggleMenu() { toast('Menu pengaturan — segera hadir!'); }
+
+// Close modal on overlay click
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── SEED DATA (demo) ──────────────────────────────────────────────────────
+function seedDemo() {
+  if (transactions.length) return;
+  const base = new Date();
+  const cats = ['ngaji','muda','cabe'];
+  const amounts = [250000,150000,200000,300000,100000,350000,175000,225000,125000];
+  for (let i=0; i<15; i++) {
+    const d = new Date(base); d.setDate(d.getDate()-i);
+    transactions.push({
+      id: uid(),
+      cat: cats[i%3],
+      amount: amounts[i%amounts.length],
+      date: d.toISOString().slice(0,10),
+      note: i%4===0 ? 'Infaq rutin mingguan' : '',
+      createdAt: Date.now()-i*3600000
+    });
+  }
+  save();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+(function init() {
+  loadTheme();
+  load();
+  seedDemo();
+  setHeaderDate();
+  renderDashboard();
+  // Reset hero card visibility for first load
+  document.getElementById('heroCard').style.display = '';
+  document.getElementById('fab').style.display = '';
+  // Set today's date in form
+  document.getElementById('inputDate').value = today();
+})();
+</script>
+</body>
+</html>
